@@ -9,9 +9,10 @@
 #include "shader.h"
 #include "mesh.h"
 #include "skybox.h"
+#include "texture.h"
 
-int width = 1920;
-int height = 1080;
+int width = 1280;
+int height = 720;
 
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
@@ -26,7 +27,7 @@ int main()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_SAMPLES, 4);
 
-	GLFWwindow* window = glfwCreateWindow(width, height, "Hello Window", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(width, height, "Renderer", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -49,6 +50,64 @@ int main()
 	glDisable(GL_CULL_FACE);
 	glEnable(GL_MULTISAMPLE);
 
+	// cube setup
+	std::vector<float> cubeVertices =
+	{
+		// front
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+
+		// back
+		 0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+
+		 // left
+		 -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+		 -0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		 -0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		 -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+
+		 // right
+		  0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		  0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+		  0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		  0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+
+		  // top
+		  -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+		   0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		   0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		  -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+
+		  // bottom
+		  -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+		   0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+		   0.5f, -0.5f,  0.5f,  1.0f, 1.0f,
+		  -0.5f, -0.5f,  0.5f,  0.0f, 1.0f
+	};
+
+	std::vector<unsigned int> cubeIndices =
+	{
+		 0,  1,  2,  2,  3,  0,
+		 4,  5,  6,  6,  7,  4,
+		 8,  9, 10, 10, 11,  8,
+		12, 13, 14, 14, 15, 12,
+		16, 17, 18, 18, 19, 16,
+		20, 21, 22, 22, 23, 20
+	};
+
+	Mesh cubeMesh(cubeVertices, cubeIndices, PositionTexture);
+	glm::vec3 cubeSize = glm::vec3(1.0f);
+	glm::vec3 cubePosition = glm::vec3(1.0f, 5.0f, 1.0f);
+	glm::mat4 cubeModel = glm::scale(glm::translate(glm::mat4(1.0f), cubePosition), cubeSize);
+	Shader cubeShader("res/shaders/basic.shader");
+	Texture cubeTexture("res/textures/wood/wood.png");
+
+	//grass setup
 	const int grassBladeSegments = 10;
 	float grassBladeBaseWidth = 0.02f;
 	int grassBladeInstancesPerSide = 128;
@@ -84,6 +143,7 @@ int main()
 	Shader grassShader("res/shaders/grass.shader");
 	glm::mat4 grassBladeModel = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f));
 
+	//skybox setup
 	Skybox skybox({
 		"res/textures/skybox/right.png",
 		"res/textures/skybox/left.png",
@@ -176,6 +236,14 @@ int main()
 		grassShader.SetFloat("patchSize", grassPatchSize);
 		grassShader.SetVec3("cameraPosition", cameraPosition);
 		grassBladeMesh.DrawInstanced(grassBladeInstancesPerSide * grassBladeInstancesPerSide);
+
+		cubeShader.Use();
+		cubeShader.SetMat4("model", cubeModel);
+		cubeShader.SetMat4("view", view);
+		cubeShader.SetMat4("projection", projection);
+		cubeTexture.Bind();
+		cubeShader.SetInt("uTexture", 0);
+		cubeMesh.Draw();
 
 		skyboxShader.Use();
 		skyboxShader.SetMat4("view", skyboxView);
