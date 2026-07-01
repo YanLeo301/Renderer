@@ -3,6 +3,7 @@
 This is an OpenGL Renderer with clean, reusable abstractions for components (Mesh, Shader, Texture, Skybox).
 
 Procedural grass field rendered using Instanced Rendering:
+
 ![](demo/grass_demo.gif)
 
 ## Usage
@@ -34,6 +35,8 @@ while (!glfwWindowShouldClose(window))
 ```
 
 The resulting rendered cube then looks like this:
+
+<img width="541" height="399" alt="cube-example" src="https://github.com/user-attachments/assets/342a4fef-44b3-488b-86a2-56e3b4042966" />
 
 ## Controls
 
